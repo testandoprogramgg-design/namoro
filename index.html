@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meu Eterno Jardim</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;font-family:'Cormorant Garamond',Georgia,serif;color:#fff;-webkit-tap-highlight-color:transparent}
+body.s1{background:radial-gradient(ellipse at 50% 115%,#0f4a2a 0%,#07180f 45%,#000 80%) fixed}
+body.s2{background:#020d07;overflow:hidden}
+body.s3{background:radial-gradient(circle at 12% 18%,rgba(200,10,45,.6),transparent 45%),radial-gradient(circle at 88% 68%,rgba(225,20,65,.5),transparent 45%),radial-gradient(circle at 50% 115%,rgba(130,0,25,.85),transparent 55%),#060002;background-attachment:fixed}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+#app{position:relative;z-index:2;transition:opacity .8s}
+#app.fade{opacity:0}
+.hidden{display:none!important}
+.stage{display:none;min-height:100svh;width:100%;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem}
+.stage.active{display:flex}
+
+/* Etapa 1 */
+.title{font-family:'Cinzel Decorative',serif;font-size:clamp(2.4rem,9vw,6.4rem);text-align:center;margin:0 0 3rem;line-height:1.1;color:#dc143c;-webkit-text-stroke:1px rgba(255,255,255,.55);text-shadow:0 0 18px rgba(220,20,60,.7),0 3px 0 #7a0a22;animation:glow 4s ease-in-out infinite}
+@keyframes glow{50%{text-shadow:0 0 34px rgba(255,60,100,.95),0 3px 0 #7a0a22}}
+.btn-laco{font:700 clamp(1.1rem,3.4vw,1.5rem) 'Cormorant Garamond',serif;color:#ffd84a;background:linear-gradient(135deg,#4b0f96,#8a2be2);border:2px solid #ffd84a;border-radius:999px;padding:.9rem 2.4rem;cursor:pointer;box-shadow:0 0 22px rgba(138,43,226,.65),inset 0 0 12px rgba(255,216,74,.25);transition:transform .25s,box-shadow .25s}
+.btn-laco:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 0 38px rgba(160,70,255,.9),inset 0 0 16px rgba(255,216,74,.4)}
+
+/* Etapa 2 */
+#game{position:relative;height:100svh;padding:0}
+#flappy{width:100%;height:100%;display:block}
+.hud{position:absolute;top:1rem;left:50%;transform:translateX(-50%);font:700 2rem 'Cinzel Decorative',serif;color:#ff4d6d;text-shadow:0 0 12px rgba(255,60,100,.8);pointer-events:none}
+.hint{position:absolute;bottom:.8rem;margin:0;opacity:.6;pointer-events:none}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;background:rgba(0,0,0,.6);text-align:center;font-size:clamp(1.4rem,5vw,2.2rem);padding:1rem}
+.overlay p{margin:0}
+
+/* Etapa 3 */
+.final-wrap{width:100%;max-width:820px;display:flex;flex-direction:column;align-items:center;padding:2rem 0}
+.congrats{font:700 clamp(1.1rem,3.4vw,1.7rem)/1.5 'Cormorant Garamond',serif;text-align:center;margin:0 0 1rem;text-shadow:0 2px 12px #000}
+.congrats span{display:block;font:700 clamp(2rem,8vw,4.2rem)/1.15 'Cinzel Decorative',serif;color:#ff2d55;-webkit-text-stroke:1px #fff;text-shadow:0 0 24px rgba(255,45,85,.8);margin-bottom:.8rem}
+.slots,.tray{display:flex;flex-wrap:wrap;justify-content:center}
+.slots{gap:1rem 1.5rem;margin:1.2rem 0}
+.word{display:flex;gap:6px}
+.tray{gap:.8rem;margin:1rem 0;min-height:70px}
+.tray:empty{display:none}
+.slot,.card{width:clamp(46px,12vw,78px);height:clamp(56px,14vw,88px);border-radius:14px}
+.slot{display:grid;place-items:center;border:2px dashed rgba(255,255,255,.4);background:rgba(255,255,255,.06);transition:background .2s}
+.slot.over{background:rgba(255,216,74,.25);border-color:#ffd84a}
+.card{display:grid;place-items:center;font:700 clamp(1rem,3.8vw,1.55rem) 'Cormorant Garamond',serif;color:#fff;background:linear-gradient(145deg,#c4163a,#6b0a1d);border:2px solid #ffd84a;box-shadow:0 4px 14px rgba(0,0,0,.5);cursor:grab;user-select:none;touch-action:none;transition:transform .15s,box-shadow .2s}
+.tray .card{transform:rotate(var(--r,0deg))}
+.slot .card{width:100%;height:100%;border-radius:12px}
+.card:hover{box-shadow:0 0 16px rgba(255,216,74,.7)}
+.card.sel{transform:translateY(-8px) scale(1.1);box-shadow:0 0 22px #ffd84a}
+.card.lifted{opacity:.25}
+.card.wrong{animation:shake .4s;background:#444;border-color:#f66}
+.ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-50%) scale(1.12) rotate(-4deg);box-shadow:0 14px 26px rgba(0,0,0,.55)}
+@keyframes shake{25%{translate:-6px}75%{translate:6px}}
+.slots.solved .card{background:linear-gradient(145deg,#ff4d6d,#c4102f);cursor:default;animation:bloom .7s ease both}
+.slots.solved .word:nth-child(2) .card{animation-delay:.1s}.slots.solved .word:nth-child(3) .card{animation-delay:.2s}.slots.solved .word:nth-child(4) .card{animation-delay:.3s}
+@keyframes bloom{40%{transform:scale(1.2);box-shadow:0 0 30px #ffd84a}}
+.answer{display:flex;align-items:center;justify-content:center;gap:1.4rem;margin:1.6rem 0;animation:pop .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+#no-wrap{display:inline-block}
+.yes,.no.yes{font:700 clamp(1.3rem,4.5vw,1.9rem) 'Cinzel Decorative',serif;color:#fff;background:linear-gradient(135deg,#ff2d55,#b0102f);border:2px solid #fff;border-radius:999px;padding:.7rem 2rem;cursor:pointer;box-shadow:0 0 26px rgba(255,45,85,.8);transition:transform .2s}
+.yes:hover{transform:scale(1.08)}
+.no{font:700 1.3rem 'Cormorant Garamond',serif;color:#ddd;background:#2a2a2a;border:2px solid #777;border-radius:999px;padding:.6rem 1.6rem;cursor:pointer}
+.no.fly{position:fixed;z-index:60;transform-origin:top left;transition:left .22s cubic-bezier(.3,1.6,.5,1),top .22s cubic-bezier(.3,1.6,.5,1),transform .22s}
+.no.settled{position:static!important;transform:none!important;opacity:.5}
+button:disabled{cursor:default}
+.reveal{width:100%;max-height:0;opacity:0;overflow:hidden;transition:max-height 1.8s ease,opacity 1.4s ease .3s}
+.reveal.open{opacity:1}
+.letter{margin:1rem auto 2rem;max-width:680px;padding:3rem clamp(1.4rem,5vw,3rem) 2rem;position:relative;border-radius:24px;border:1px solid rgba(255,255,255,.5);background:linear-gradient(160deg,#d9455f,#f08fa0);color:#fff9f5;box-shadow:0 0 50px rgba(255,120,150,.55),inset 0 0 40px rgba(255,255,255,.18)}
+.letter::before{content:'🌹';position:absolute;top:-1.4rem;left:50%;transform:translateX(-50%);font-size:2.6rem}
+.letter p{margin:0;font:500 clamp(1.15rem,3.6vw,1.45rem)/1.85 'Cormorant Garamond',serif;text-shadow:0 1px 3px rgba(90,0,20,.4)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}}
+
+</style>
+</head>
+<body class="s1">
+<canvas id="fx"></canvas>
+<main id="app">
+
+  <!-- ETAPA 1: MENU -->
+  <section id="menu" class="stage active">
+    <h1 class="title">Meu Eterno Jardim</h1>
+    <button id="btn-start" class="btn-laco">Nosso Laço Carmesim</button>
+  </section>
+
+  <!-- ETAPA 2: MINIGAME -->
+  <section id="game" class="stage">
+    <div class="hud">♥ <span id="score">0/10</span></div>
+    <canvas id="flappy"></canvas>
+    <div id="overlay" class="overlay hidden">
+      <p id="ov-text"></p>
+      <button id="btn-retry" class="btn-laco">Tentar de novo</button>
+    </div>
+    <p class="hint">Clique, toque ou aperte Espaço</p>
+  </section>
+
+  <!-- ETAPA 3: PUZZLE + PEDIDO + CARTA -->
+  <section id="final" class="stage">
+    <div class="final-wrap">
+      <h2 class="congrats"><span>PARABÉNS MEU AMOR!!</span> Agora, para minha rosa carmesim, você terá que concluir esse pequeno puzzle para conseguir obter sua recompensa</h2>
+      <div id="slots" class="slots"></div>
+      <div id="tray" class="tray"></div>
+      <div id="answer" class="answer hidden">
+        <button id="btn-yes" class="yes">SIM ❤️</button>
+        <span id="no-wrap"><button id="btn-no" class="no">NÃO</button></span>
+      </div>
+      <div id="reveal" class="reveal">
+        <article class="letter">
+          <p>Saiba que eu te amo muito, amor da minha vida. Poder ficar ao seu lado é um sonho para mim que será realizado. Um fato bem curioso, meu bem, é que, desde o dia em que eu te conheci, eu sabia que nossos destinos seriam entrelaçados e que o nosso amor ficaria combinado. Você é a minha rosa carmesim, a luz que ilumina todo o meu jardim. Você é o meu eterno sonho, o sonho que eu vou realizar e ao lado do qual eu sempre vou ficar. Você é tudo aquilo que transcende a matéria e a realidade, a borboleta que encorpa sobre o meu jardim e o brilho que faz a vida ganhar a sua cor. Eu te amo muito, meu bem.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+</main>
+<script>
+// Avisos em tempo real no seu celular via ntfy.sh (gratuito, sem cadastro).
+// Instale o app "ntfy" e assine o tópico abaixo. Em arquivo local, localhost ou com ?teste na URL, nada é enviado.
+window.Log = (() => {
+  const TOPIC = 'jardim-bf872b260070e919';
+  const OFF = /[?&]teste/.test(location.search) || ['', 'localhost', '127.0.0.1'].includes(location.hostname);
+  const sent = new Set();
+
+  function send(message, { title = 'Meu Eterno Jardim', tags = ['rose'], priority = 3, once = '' } = {}) {
+    if (OFF || (once && sent.has(once))) return;
+    if (once) sent.add(once);
+    try {
+      fetch('https://ntfy.sh', { method: 'POST', keepalive: true, body: JSON.stringify({ topic: TOPIC, title, message, tags, priority }) }).catch(() => {});
+    } catch (e) { /* o site nunca deve quebrar por causa do log */ }
+  }
+  return { send };
+})();
+
+</script>
+<script>
+// Pétalas e confetes num único canvas (leve: poucos objetos, loop único).
+window.Fx = (() => {
+  const c = document.getElementById('fx'), x = c.getContext('2d');
+  const R = (a, b) => a + Math.random() * (b - a);
+  const PETAL = ['#b0102f', '#dc143c', '#8c0c26', '#ff5a7a'];
+  const CONF = ['#dc143c', '#ffd84a', '#8a2be2', '#ffffff', '#ff6b8b', '#2fbf71'];
+  let W, H, petals = [], conf = [], pRate = .05, pCap = 40, cRate = 0, last = 0;
+
+  function size() {
+    const d = devicePixelRatio || 1; W = innerWidth; H = innerHeight;
+    c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
+  }
+  addEventListener('resize', size); size();
+
+  const newPetal = (y = -20) => petals.push({ x: R(0, W), y, s: R(6, 14), vy: R(.6, 1.8), vx: R(-.3, .6),
+    a: R(0, 6.28), va: R(-.04, .04), ph: R(0, 6.28), c: PETAL[(Math.random() * 4) | 0] });
+
+  function newConf(burst, side = Math.random() < .5 ? 0 : 1) {
+    const dir = side ? -1 : 1;
+    conf.push({ x: side ? W + 8 : -8, y: burst ? R(H * .15, H * .7) : R(-10, H * .3),
+      vx: dir * (burst ? R(4, 12) : R(1, 3)), vy: burst ? R(-9, -1) : R(0, 2),
+      s: R(6, 11), a: R(0, 6.28), va: R(-.25, .25), c: CONF[(Math.random() * 6) | 0] });
+  }
+
+  function loop(t) {
+    const f = Math.min(2, (t - last) / 16.67 || 1); last = t;
+    x.clearRect(0, 0, W, H);
+    if (petals.length < pCap && Math.random() < pRate * f) newPetal();
+    if (cRate && conf.length < 220 && Math.random() < cRate * f) newConf(false);
+    petals = petals.filter(p => p.y < H + 30);
+    petals.forEach(p => {
+      p.y += p.vy * f; p.ph += .03 * f; p.x += (p.vx + Math.sin(p.ph) * .8) * f; p.a += p.va * f;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.scale(1, Math.abs(Math.cos(p.ph)) * .7 + .3);
+      x.fillStyle = p.c; x.beginPath(); x.moveTo(0, -p.s);
+      x.quadraticCurveTo(p.s, -p.s / 3, 0, p.s); x.quadraticCurveTo(-p.s, -p.s / 3, 0, -p.s); x.fill(); x.restore();
+    });
+    conf = conf.filter(p => p.y < H + 20);
+    conf.forEach(p => {
+      p.vy += .22 * f; p.vx *= .985; p.x += p.vx * f; p.y += p.vy * f; p.a += p.va * f;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore();
+    });
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  return {
+    set(rate, cap, confRate) { pRate = rate; pCap = cap; cRate = confRate; },
+    petalBurst(n) { for (let i = 0; i < n; i++) newPetal(R(-H * .5, H * .6)); },
+    confetti(n) { for (let i = 0; i < n; i++) newConf(true); },
+  };
+})();
+
+</script>
+<script>
+// Minigame: coração (estilo Flappy Bird) atravessando vinhas e espinhos.
+window.Game = (() => {
+  const $ = s => document.querySelector(s);
+  const cv = $('#flappy'), ctx = cv.getContext('2d'), stage = $('#game');
+  const hud = $('#score'), ov = $('#overlay'), ovText = $('#ov-text'), retry = $('#btn-retry');
+  const H = 600, GOAL = 10, SPACING = 250;           // altura lógica fixa; o resto escala
+  const HEART = new Path2D('M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z');
+  let W, s, d = 1, state, hy, vy, obs, score, off, raf, running = false, last = 0, deaths = 0;
+  const api = { start, onWin() {} };
+
+  function size() {
+    d = devicePixelRatio || 1;
+    const w = stage.clientWidth, h = stage.clientHeight;
+    cv.width = w * d; cv.height = h * d; s = h / H; W = w / s;
+  }
+  addEventListener('resize', size);
+  const heartX = () => Math.min(W * .28, 220);
+
+  function reset() {
+    size(); state = 'ready'; hy = H / 2; vy = 0; score = 0; off = 0; obs = [];
+    let prev = H / 2;
+    for (let n = 0; n < GOAL; n++) {                 // dificuldade progressiva: o vão encolhe
+      const gap = 200 - n * 5, lo = Math.max(gap / 2 + 50, prev - 150), hi = Math.min(H - gap / 2 - 50, prev + 150);
+      prev = lo + Math.random() * (hi - lo);
+      obs.push({ x: heartX() + 380 + n * SPACING, gy: prev, gap, w: 64, seed: Math.random() * 6, passed: false });
+    }
+    hud.textContent = '0/' + GOAL; ov.classList.add('hidden');
+  }
+
+  function flap() {
+    if (state === 'ready') state = 'play';
+    if (state === 'play') vy = -6.6;
+  }
+  const hitRect = (cx, cy, r, x, y, w, h) => {
+    const dx = cx - Math.max(x, Math.min(cx, x + w)), dy = cy - Math.max(y, Math.min(cy, y + h));
+    return dx * dx + dy * dy < r * r;
+  };
+  function end(text, canRetry) {
+    if (canRetry) deaths++;
+    ovText.textContent = text; retry.classList.toggle('hidden', !canRetry); ov.classList.remove('hidden');
+  }
+
+  function update(f, t) {
+    if (state === 'ready') { hy = H / 2 + Math.sin(t / 300) * 8; return; }
+    if (state !== 'play') return;
+    const sp = 2.4 + score * .08, hx = heartX();
+    vy = Math.min(vy + .38 * f, 9); hy += vy * f; off += sp * f;
+    for (const o of obs) {
+      o.x -= sp * f;
+      if (!o.passed && o.x + o.w < hx) {
+        o.passed = true; score++; hud.textContent = score + '/' + GOAL;
+        if (score >= GOAL) { state = 'won'; end('Você atravessou o jardim! 🌹', false); api.onWin(deaths); setTimeout(() => running = false, 2600); return; }
+      }
+      const top = o.gy - o.gap / 2, bot = o.gy + o.gap / 2;
+      if (hitRect(hx, hy, 13, o.x + 10, -60, o.w - 20, top + 60) || hitRect(hx, hy, 13, o.x + 10, bot, o.w - 20, H - bot + 60)) { state = 'dead'; end('Os espinhos venceram desta vez…', true); return; }
+    }
+    if (hy < 12 || hy > H - 12) { state = 'dead'; end('Você saiu do jardim…', true); }
+  }
+
+  function vine(o, top) {
+    const len = top ? o.gy - o.gap / 2 : H - o.gy - o.gap / 2, dir = top ? 1 : -1, by = top ? 0 : H, cx = o.x + o.w / 2;
+    const px = u => cx + Math.sin(u * .045 + o.seed) * 9, py = u => by + dir * u;
+    ctx.lineCap = 'round';
+    [[24, '#0b3a1c', 0], [16, '#1e7a34', 0], [4, '#6be07c', 4]].forEach(([w, c, dx]) => {
+      ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath();
+      for (let u = -20; u <= len - 12; u += 8) u === -20 ? ctx.moveTo(px(u) + dx, py(u)) : ctx.lineTo(px(u) + dx, py(u));
+      ctx.stroke();
+    });
+    for (let u = 24, k = 0; u < len - 14; u += 26, k++) {
+      const sd = k % 2 ? 1 : -1, X = px(u), Y = py(u);
+      ctx.fillStyle = '#e6e0c4'; ctx.beginPath();     // espinho lateral
+      ctx.moveTo(X + sd * 9, Y - 5); ctx.lineTo(X + sd * 9, Y + 5); ctx.lineTo(X + sd * 23, Y + dir * 8); ctx.fill();
+      if (k % 2) { ctx.fillStyle = '#2f9a45'; ctx.beginPath(); ctx.ellipse(X - sd * 16, Y + dir * 6, 11, 5, sd * .6, 0, 6.3); ctx.fill(); } // folha
+    }
+    const X = px(len - 12), Y = py(len);                // espinho na ponta, voltado ao vão
+    ctx.fillStyle = '#e6e0c4'; ctx.beginPath(); ctx.moveTo(X - 7, Y - dir * 3); ctx.lineTo(X + 7, Y - dir * 3); ctx.lineTo(X, Y + dir * 10); ctx.fill();
+  }
+
+  function draw(t) {
+    ctx.setTransform(d * s, 0, 0, d * s, 0, 0);
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#020d07'); g.addColorStop(1, '#0b3a22');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    const m = ctx.createRadialGradient(W * .8, H * .2, 0, W * .8, H * .2, 260); m.addColorStop(0, 'rgba(255,90,120,.22)'); m.addColorStop(1, 'rgba(255,90,120,0)');
+    ctx.fillStyle = m; ctx.fillRect(0, 0, W, H);
+    [[.2, '#06251a', 480], [.5, '#0a3321', 530]].forEach(([k, c, base]) => {
+      ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, H);
+      for (let x = 0; x <= W + 12; x += 12) ctx.lineTo(x, base + Math.sin((x + off * k) / 70) * 18);
+      ctx.lineTo(W, H); ctx.fill();
+    });
+    obs.forEach(o => { vine(o, true); vine(o, false); });
+    ctx.save(); ctx.translate(heartX(), hy); ctx.rotate(Math.max(-.4, Math.min(.6, vy * .06)));
+    const p = 1 + Math.sin(t / 180) * .05; ctx.scale(p * 1.9, p * 1.9); ctx.translate(-12, -12.5);
+    const hg = ctx.createRadialGradient(9, 8, 1, 12, 12, 14); hg.addColorStop(0, '#ff7a93'); hg.addColorStop(1, '#c4102f');
+    ctx.shadowColor = 'rgba(255,40,80,.9)'; ctx.shadowBlur = 18; ctx.fillStyle = hg; ctx.fill(HEART);
+    ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,.65)'; ctx.lineWidth = .7; ctx.stroke(HEART); ctx.restore();
+  }
+
+  function loop(t) {
+    if (!running) return;
+    const f = Math.min(2, (t - last) / 16.67 || 1); last = t;
+    update(f, t); draw(t); raf = requestAnimationFrame(loop);
+  }
+  function start() { reset(); running = true; last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+
+  stage.addEventListener('pointerdown', e => { if (!e.target.closest('button')) flap(); });
+  addEventListener('keydown', e => { if (e.code === 'Space' && stage.classList.contains('active')) { e.preventDefault(); flap(); } });
+  retry.addEventListener('click', reset);
+  return api;
+})();
+
+</script>
+<script>
+// Puzzle de sílabas: arrastar e soltar (mouse/toque) ou tocar para selecionar e tocar no espaço.
+window.Puzzle = (() => {
+  const $ = s => document.querySelector(s);
+  const board = $('#slots'), tray = $('#tray');
+  const SYL = ['Vo', 'cê', 'quer', 'na', 'mo', 'rar', 'co', 'mi', 'go??'];
+  const GROUPS = [[0, 1], [2], [3, 4, 5], [6, 7, 8]];  // palavras: Você | quer | namorar | comigo??
+  const place = Array(SYL.length).fill(null);           // place[slot] = id da sílaba
+  const order = SYL.map((_, i) => i).sort(() => Math.random() - .5);
+  let sel = null, solved = false, drag = null, ghost = null;
+  const slots = [];
+
+  const cards = SYL.map((t, i) => {
+    const e = document.createElement('div');
+    e.className = 'card'; e.textContent = t; e.dataset.i = i;
+    e.style.setProperty('--r', (Math.random() * 12 - 6).toFixed(1) + 'deg');
+    return e;
+  });
+  GROUPS.forEach(g => {
+    const w = document.createElement('div'); w.className = 'word';
+    g.forEach(i => { const sl = document.createElement('div'); sl.className = 'slot'; sl.dataset.i = i; w.append(sl); slots[i] = sl; });
+    board.append(w);
+  });
+
+  function render() {
+    slots.forEach((sl, i) => { if (place[i] !== null) sl.append(cards[place[i]]); });
+    order.forEach(id => { if (!place.includes(id)) tray.append(cards[id]); });
+    cards.forEach((c, id) => c.classList.toggle('sel', id === sel));
+  }
+  function put(slot, id) {            // coloca (ou troca) a sílaba no espaço
+    const from = place.indexOf(id), old = place[slot];
+    if (from > -1) place[from] = old;
+    place[slot] = id; sel = null; render(); check();
+  }
+  function take(id) { const at = place.indexOf(id); if (at > -1) { place[at] = null; sel = null; render(); } }
+
+  function check() {
+    if (solved || place.includes(null)) return;
+    const wrong = place.map((id, i) => id !== i ? i : -1).filter(i => i > -1);
+    if (!wrong.length) {
+      solved = true; Log.send('Montou o puzzle: "Você quer namorar comigo??" 🧩', { once: 'puzzle' }); board.classList.add('solved'); Fx.petalBurst(30);
+      setTimeout(() => { const a = $('#answer'); a.classList.remove('hidden'); a.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 1100);
+      return;
+    }
+    wrong.forEach(i => cards[place[i]].classList.add('wrong'));
+    setTimeout(() => { wrong.forEach(i => { cards[place[i]].classList.remove('wrong'); place[i] = null; }); render(); }, 750);
+  }
+
+  function tap(id) {
+    const at = place.indexOf(id);
+    if (sel !== null && sel !== id) { if (at > -1) put(at, sel); else { sel = id; render(); } }
+    else if (at > -1) take(id);
+    else { sel = sel === id ? null : id; render(); }
+  }
+
+  document.addEventListener('pointerdown', e => {
+    const c = e.target.closest('.card');
+    if (c && !solved && (board.contains(c) || tray.contains(c))) drag = { c, x: e.clientX, y: e.clientY, moved: false };
+  });
+  document.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 6) {
+      drag.moved = true; const r = drag.c.getBoundingClientRect();
+      ghost = drag.c.cloneNode(true); ghost.classList.add('ghost'); ghost.style.width = r.width + 'px'; ghost.style.height = r.height + 'px';
+      document.body.append(ghost); drag.c.classList.add('lifted');
+    }
+    if (ghost) {
+      ghost.style.left = e.clientX + 'px'; ghost.style.top = e.clientY + 'px';
+      const t = document.elementFromPoint(e.clientX, e.clientY), over = t && t.closest('.slot');
+      slots.forEach(sl => sl.classList.toggle('over', sl === over));
+    }
+  });
+  function release(e) {
+    if (!drag) return;
+    const { c, moved } = drag, id = +c.dataset.i; drag = null;
+    if (ghost) { ghost.remove(); ghost = null; }
+    c.classList.remove('lifted'); slots.forEach(sl => sl.classList.remove('over'));
+    if (!moved) return tap(id);
+    const t = document.elementFromPoint(e.clientX, e.clientY), sl = t && t.closest('.slot');
+    sl ? put(+sl.dataset.i, id) : take(id);
+  }
+  document.addEventListener('pointerup', release);
+  document.addEventListener('pointercancel', release);
+  board.addEventListener('click', e => { if (sel !== null && e.target.classList.contains('slot')) put(+e.target.dataset.i, sel); });
+
+  render();
+  return {};
+})();
+
+</script>
+<script>
+// Botões SIM / NÃO: o NÃO foge e encolhe; na 5ª tentativa vira "CLARO" e faz o mesmo que o SIM.
+(() => {
+  const $ = s => document.querySelector(s);
+  const yes = $('#btn-yes'), no = $('#btn-no'), wrap = $('#no-wrap'), reveal = $('#reveal');
+  const MAX_TRIES = 5;
+  let tries = 0, done = false, lastFlee = 0;
+
+  function flee() {
+    tries++; lastFlee = performance.now();
+    Log.send(tries >= MAX_TRIES ? 'O NÃO virou CLARO 😏' : 'Tentou clicar no NÃO — tentativa ' + tries + ' 😅', { priority: 2 });
+    if (tries === 1) {                                // solta o botão do fluxo sem mexer no layout
+      const r = no.getBoundingClientRect();
+      wrap.style.width = r.width + 'px'; wrap.style.height = r.height + 'px';
+      no.classList.add('fly'); no.style.left = r.left + 'px'; no.style.top = r.top + 'px'; no.offsetWidth;
+    }
+    const last = tries >= MAX_TRIES;
+    if (last) { no.textContent = 'CLARO'; no.classList.add('yes'); }
+    const sc = last ? 1 : Math.max(.3, 1 - tries * .14), w = no.offsetWidth * sc, h = no.offsetHeight * sc, y0 = yes.getBoundingClientRect();
+    let x, y, n = 0;
+    do {                                              // posição aleatória sempre dentro da janela e longe do SIM
+      x = 8 + Math.random() * Math.max(0, innerWidth - w - 16); y = 8 + Math.random() * Math.max(0, innerHeight - h - 16); n++;
+    } while (n < 25 && x < y0.right + 12 && x + w > y0.left - 12 && y < y0.bottom + 12 && y + h > y0.top - 12);
+    Object.assign(no.style, { left: x + 'px', top: y + 'px', transform: `scale(${sc})` });
+  }
+
+  function conclude(answer) {
+    if (done) return; done = true;
+    Log.send('RESPOSTA: ' + answer + '!! 🎉 (tentativas no NÃO: ' + tries + ')', { title: 'Ela respondeu!', priority: 5, tags: ['tada', 'heart'], once: 'answer' });
+    yes.disabled = no.disabled = true; no.classList.add('settled');
+    Fx.confetti(240); Fx.petalBurst(80); Fx.set(.2, 110, .14);
+    reveal.style.maxHeight = reveal.scrollHeight + 'px'; reveal.classList.add('open');
+    reveal.addEventListener('transitionend', e => { if (e.propertyName === 'max-height') reveal.style.maxHeight = 'none'; });
+    setTimeout(() => reveal.scrollIntoView({ behavior: 'smooth', block: 'center' }), 700);
+  }
+
+  no.addEventListener('pointerdown', e => { if (!done && tries < MAX_TRIES) { e.preventDefault(); flee(); } });
+  no.addEventListener('click', e => {
+    if (done || performance.now() - lastFlee < 500) return;   // ignora o "clique" residual do toque que acabou de fugir
+    tries < MAX_TRIES ? flee() : conclude('CLARO');                  // Enter/Espaço no teclado também contam como tentativa
+  });
+  yes.addEventListener('click', () => conclude('SIM'));
+})();
+
+</script>
+<script>
+// Controla a navegação entre as 3 etapas.
+(() => {
+  const $ = s => document.querySelector(s), app = $('#app');
+  const MODES = { menu: [.05, 38, 0], game: [.015, 12, 0], final: [.09, 60, .05] };  // [ritmo pétalas, máx pétalas, confete]
+  const BODY = { menu: 's1', game: 's2', final: 's3' };
+  let busy = false;
+
+  function go(name, after) {
+    if (busy) return; busy = true;
+    Fx.petalBurst(70); app.classList.add('fade');
+    setTimeout(() => {
+      document.querySelectorAll('.stage').forEach(s => s.classList.toggle('active', s.id === name));
+      document.body.className = BODY[name]; Fx.set(...MODES[name]); scrollTo(0, 0);
+      app.classList.remove('fade'); busy = false; if (after) after();
+    }, 900);
+  }
+
+  $('#btn-start').addEventListener('click', () => { Log.send('Clicou em "Nosso Laço Carmesim" ▶️', { once: 'start' }); go('game', () => Game.start()); });
+  Game.onWin = deaths => { Log.send('Venceu o minigame do coração 💚 (derrotas antes: ' + deaths + ')', { once: 'game' }); Fx.confetti(150); Fx.petalBurst(60); setTimeout(() => go('final'), 2000); };
+  Fx.set(...MODES.menu);
+  Log.send('Abriram o site 👀', { once: 'open', priority: 2 });
+})();
+
+</script>
+</body>
+</html>
